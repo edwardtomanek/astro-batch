@@ -10,23 +10,16 @@ def kep2cart(kep, mu=1.32712440018e+20):
     """
     if isinstance(kep, list) or isinstance(kep, tuple):
         kep = np.array(kep, np.float64)
-        
-    if len(kep.shape) == 3:
-        a = np.copy(kep[:, :, [0]])
-        e = np.copy(kep[:, :, [1]])
-        i = np.copy(kep[:, :, [2]])
-        w = np.copy(kep[:, :, [3]])
-        RAAN = np.copy(kep[:, :, [4]])
-        theta = np.copy(kep[:, :, [5]])
-    elif len(kep.shape) == 2:
-        a = np.copy(kep[:, [0]])
-        e = np.copy(kep[:, [1]])
-        i = np.copy(kep[:, [2]])
-        w = np.copy(kep[:, [3]])
-        RAAN = np.copy(kep[:, [4]])
-        theta = np.copy(kep[:, [5]])
 
-    cart = np.zeros(kep.shape, np.float64)
+    shape = kep.shape
+    cart = np.zeros(shape, np.float64)
+
+    a = np.copy(kep[..., [0]])
+    e = np.copy(kep[..., [1]])
+    i = np.copy(kep[..., [2]])
+    w = np.copy(kep[..., [3]])
+    RAAN = np.copy(kep[..., [4]])
+    theta = np.copy(kep[..., [5]])
 
     sinE = (np.sqrt(1 - e**2)*np.sin(theta))/(1 + e*np.cos(theta))
     cosE = (e + np.cos(theta))/(1 + e*np.cos(theta))
@@ -46,20 +39,55 @@ def kep2cart(kep, mu=1.32712440018e+20):
     cosRAAN = np.cos(RAAN)
     sinRAAN = np.sin(RAAN)
 
-    if len(kep.shape) == 3:
-        cart[:, :, [0]] = ox*(cosw*cosRAAN - sinw*cosi*sinRAAN) - oy*(sinw*cosRAAN + cosw*cosi*sinRAAN)
-        cart[:, :, [1]] = ox*(cosw*sinRAAN + sinw*cosi*cosRAAN) + oy*(cosw*cosi*cosRAAN - sinw*sinRAAN)
-        cart[:, :, [2]] = ox*sinw*sini + oy*cosw*sini
+    cart[..., [0]] = ox*(cosw*cosRAAN - sinw*cosi*sinRAAN) - oy*(sinw*cosRAAN + cosw*cosi*sinRAAN)
+    cart[..., [1]] = ox*(cosw*sinRAAN + sinw*cosi*cosRAAN) + oy*(cosw*cosi*cosRAAN - sinw*sinRAAN)
+    cart[..., [2]] = ox*sinw*sini + oy*cosw*sini
 
-        cart[:, :, [3]] = odx*(cosw*cosRAAN - sinw*cosi*sinRAAN) - ody*(sinw*cosRAAN + cosw*cosi*sinRAAN)
-        cart[:, :, [4]] = odx*(cosw*sinRAAN + sinw*cosi*cosRAAN) + ody*(cosw*cosi*cosRAAN - sinw*sinRAAN)
-        cart[:, :, [5]] = odx*sinw*sini + ody*cosw*sini
-    elif len(kep.shape) == 2:
-        cart[:, [0]] = ox*(cosw*cosRAAN - sinw*cosi*sinRAAN) - oy*(sinw*cosRAAN + cosw*cosi*sinRAAN)
-        cart[:, [1]] = ox*(cosw*sinRAAN + sinw*cosi*cosRAAN) + oy*(cosw*cosi*cosRAAN - sinw*sinRAAN)
-        cart[:, [2]] = ox*sinw*sini + oy*cosw*sini
-
-        cart[:, [3]] = odx*(cosw*cosRAAN - sinw*cosi*sinRAAN) - ody*(sinw*cosRAAN + cosw*cosi*sinRAAN)
-        cart[:, [4]] = odx*(cosw*sinRAAN + sinw*cosi*cosRAAN) + ody*(cosw*cosi*cosRAAN - sinw*sinRAAN)
-        cart[:, [5]] = odx*sinw*sini + ody*cosw*sini
+    cart[..., [3]] = odx*(cosw*cosRAAN - sinw*cosi*sinRAAN) - ody*(sinw*cosRAAN + cosw*cosi*sinRAAN)
+    cart[..., [4]] = odx*(cosw*sinRAAN + sinw*cosi*cosRAAN) + ody*(cosw*cosi*cosRAAN - sinw*sinRAAN)
+    cart[..., [5]] = odx*sinw*sini + ody*cosw*sini
     return cart
+
+def cart2kep(cart, mu=1.32712440018e+20):
+    """
+    Inputs:
+       cart: Orbit list. 2D or 3D numpy array with last dimension in format [rx, ry, rz, vx, vy, vz]. Can also be a tuple or a list.
+       mu: Gravitational parameter of central body. Defaults to MU_SUN (1.32712440018e+20) in m3/s2
+    Outputs:
+       kep: Orbit list in Cartesian vectors [a, e, i, w, RAAN, theta], along the last dimension with same size as cart.
+    """
+    if isinstance(cart, list) or isinstance(cart, tuple):
+        cart = np.array(cart, np.float64)
+
+    shape = cart.shape
+    kep = np.zeros(shape, np.float64)
+
+    r_vec = np.copy(cart[..., 0:3])
+    v_vec = np.copy(cart[..., 3:6])
+
+    
+    r = np.linalg.norm(r_vec, axis=-1, keepdims=True)
+    v = np.linalg.norm(v_vec, axis=-1, keepdims=True)
+
+    h_vec = np.cross(r_vec, v_vec)
+    h = np.linalg.norm(h_vec, axis=-1, keepdims=True)
+    e_vec = np.cross(v_vec, h_vec)/mu - r_vec/r
+
+    kep[..., [1]] = e = np.linalg.norm(e_vec, axis=-1, keepdims=True)
+
+    kep[..., [2]] = np.arccos(h_vec[..., [2]]/h)
+
+    n_vec = np.cross([0.0, 0.0, 1.0], h_vec)
+    n = np.linalg.norm(n_vec, axis=-1, keepdims=True)
+
+    rdotvsign = np.sign(np.vecdot(r_vec, v_vec, keepdims=True))
+    kep[..., [5]] = (np.pi - rdotvsign*np.pi + rdotvsign*np.arccos(np.vecdot(e_vec, r_vec, keepdims=True)/(e*r)))%(2*np.pi)
+
+    nysign = np.sign(n_vec[..., [1]])
+    kep[..., [4]] = (np.pi - nysign*np.pi + nysign*np.arccos(n_vec[..., [0]]/n))%(2*np.pi)
+
+    ezsign = np.sign(e_vec[..., [2]])
+    kep[..., [3]] = (np.pi - ezsign*np.pi + ezsign*np.arccos(np.vecdot(n_vec, e_vec, keepdims=True)/(n*e)))%(2*np.pi)
+
+    kep[..., [0]] = 1/((2/r) - (v**2)/mu)
+    return kep
