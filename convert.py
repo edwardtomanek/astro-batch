@@ -124,6 +124,45 @@ def kep2mee(kep, mu=1.32712440018e+20):
 
     return mee
 
+def mee2cart(mee, mu=1.32712440018e+20):
+    """
+    Inputs:
+       mee: Orbit list. Numpy array with last dimension in format [p, f, g, h, k, L]. Can also be a tuple or a list.
+       mu: Gravitational parameter of central body. Defaults to MU_SUN (1.32712440018e+20) in m3/s2
+    Outputs:
+       cart: Orbit list in Cartesian vectors [rx, ry, rz, vx, vy, vz], along the last dimension with same size as kep.
+    """
+    if isinstance(mee, list) or isinstance(mee, tuple):
+        mee = np.array(mee, np.float64)
+
+    shape = mee.shape
+    cart = np.zeros(shape, np.float64)
+
+    p = mee[..., [0]]
+    f = mee[..., [1]]
+    g = mee[..., [2]]
+    h = mee[..., [3]]
+    k = mee[..., [4]]
+    L = mee[..., [5]]
+
+    alph2 = h**2 - k**2
+    s2 = 1 + h**2 + k**2
+    cosL = np.cos(L)
+    sinL = np.sin(L)
+    w = 1 + f*cosL + g*sinL
+    r = p/w
+    hk2 = 2*h*k
+    sqrtmup = np.sqrt(mu/p)
+
+    cart[..., [0]] = (r/s2)*(cosL + alph2*cosL + hk2*sinL)
+    cart[..., [1]] = (r/s2)*(sinL - alph2*sinL + hk2*cosL)
+    cart[..., [2]] = (2*r/s2)*(h*sinL - k*cosL)
+
+    cart[..., [3]] = (-1/s2)*sqrtmup*(sinL + alph2*sinL - hk2*cosL + g - hk2*f + alph2*g)
+    cart[..., [4]] = (-1/s2)*sqrtmup*(-cosL + alph2*cosL + hk2*sinL - f + hk2*g + alph2*f)
+    cart[..., [5]] = (2/s2)*sqrtmup*(h*cosL + k*sinL + f*h + g*k)
+    return cart
+
 def theta2E(theta, e):
     """
     Inputs:
