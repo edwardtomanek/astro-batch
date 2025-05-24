@@ -3,7 +3,7 @@ import numpy as np
 def kep2cart(kep, mu=1.32712440018e+20):
     """
     Inputs:
-       kep: Orbit list. 2D or 3D numpy array with last dimension in format [a, e, i, w, RAAN, theta]. Can also be a tuple or a list.
+       kep: Orbit list. Numpy array with last dimension in format [a, e, i, w, RAAN, theta]. Can also be a tuple or a list.
        mu: Gravitational parameter of central body. Defaults to MU_SUN (1.32712440018e+20) in m3/s2
     Outputs:
        cart: Orbit list in Cartesian vectors [rx, ry, rz, vx, vy, vz], along the last dimension with same size as kep.
@@ -46,15 +46,16 @@ def kep2cart(kep, mu=1.32712440018e+20):
     cart[..., [3]] = odx*(cosw*cosRAAN - sinw*cosi*sinRAAN) - ody*(sinw*cosRAAN + cosw*cosi*sinRAAN)
     cart[..., [4]] = odx*(cosw*sinRAAN + sinw*cosi*cosRAAN) + ody*(cosw*cosi*cosRAAN - sinw*sinRAAN)
     cart[..., [5]] = odx*sinw*sini + ody*cosw*sini
+
     return cart
 
 def cart2kep(cart, mu=1.32712440018e+20):
     """
     Inputs:
-       cart: Orbit list. 2D or 3D numpy array with last dimension in format [rx, ry, rz, vx, vy, vz]. Can also be a tuple or a list.
+       cart: Orbit list. Numpy array with last dimension in format [rx, ry, rz, vx, vy, vz]. Can also be a tuple or a list.
        mu: Gravitational parameter of central body. Defaults to MU_SUN (1.32712440018e+20) in m3/s2
     Outputs:
-       kep: Orbit list in Cartesian vectors [a, e, i, w, RAAN, theta], along the last dimension with same size as cart.
+       kep: Orbit list in Keplerian elements [a, e, i, w, RAAN, theta], along the last dimension with same size as cart.
     """
     if isinstance(cart, list) or isinstance(cart, tuple):
         cart = np.array(cart, np.float64)
@@ -90,4 +91,53 @@ def cart2kep(cart, mu=1.32712440018e+20):
     kep[..., [3]] = (np.pi - ezsign*np.pi + ezsign*np.arccos(np.vecdot(n_vec, e_vec, keepdims=True)/(n*e)))%(2*np.pi)
 
     kep[..., [0]] = 1/((2/r) - (v**2)/mu)
+
     return kep
+
+def kep2mee(kep, mu=1.32712440018e+20):
+    """
+    Inputs:
+       kep: Orbit list. Numpy array with last dimension in format [a, e, i, w, RAAN, theta]. Can also be a tuple or a list.
+       mu: Gravitational parameter of central body. Defaults to MU_SUN (1.32712440018e+20) in m3/s2
+    Outputs:
+       mee: Orbit list in modified equinoctial elements [p, f, g, h, k, L], along the last dimension with same size as kep.
+    """
+    if isinstance(kep, list) or isinstance(kep, tuple):
+        kep = np.array(kep, np.float64)
+
+    shape = kep.shape
+    mee = np.zeros(shape, np.float64)
+
+    a = np.copy(kep[..., [0]])
+    e = np.copy(kep[..., [1]])
+    i = np.copy(kep[..., [2]])
+    w = np.copy(kep[..., [3]])
+    RAAN = np.copy(kep[..., [4]])
+    theta = np.copy(kep[..., [5]])
+
+    mee[..., [0]] = a*(1 - e**2)
+    mee[..., [1]] = e*np.cos(w + RAAN)
+    mee[..., [2]] = e*np.sin(w + RAAN)
+    mee[..., [3]] = np.tan(i/2)*np.cos(RAAN)
+    mee[..., [4]] = np.tan(i/2)*np.sin(RAAN)
+    mee[..., [5]] = w + RAAN + theta
+
+    return mee
+
+def theta2E(theta, e):
+    """
+    Inputs:
+       theta: True anomaly list. Numpy array. Can also be a tuple or a list.
+       e: Eccentricity list. Numpy array. Can also be a tuple or a list.
+    Outputs:
+       E: Eccentric anomaly list.
+    """
+    if isinstance(theta, list) or isinstance(theta, tuple):
+        theta = np.array(theta, np.float64)
+    if isinstance(e, list) or isinstance(e, tuple):
+        e = np.array(e, np.float64)
+
+    sinE = (np.sqrt(1 - e**2)*np.sin(theta))/(1 + e*np.cos(theta))
+    cosE = (e + np.cos(theta))/(1 + e*np.cos(theta))
+    E = np.arctan2(sinE, cosE)
+    return E
