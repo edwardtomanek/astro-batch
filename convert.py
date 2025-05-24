@@ -180,3 +180,38 @@ def theta2E(theta, e):
     cosE = (e + np.cos(theta))/(1 + e*np.cos(theta))
     E = np.arctan2(sinE, cosE)
     return E
+
+
+def E2theta(E, e):
+    """
+    Inputs:
+       E: Eccentric anomaly list. Numpy array. Can also be a tuple or a list.
+       e: Eccentricity list. Numpy array. Can also be a tuple or a list.
+    Outputs:
+       theta: True anomaly list.
+    """
+    if isinstance(E, list) or isinstance(theta, tuple):
+        E = np.array(E, np.float64)
+    if isinstance(e, list) or isinstance(e, tuple):
+        e = np.array(e, np.float64)
+
+    sintheta = (np.sqrt(1 - e**2)*np.sin(E))/(1 - e*np.cos(E))
+    costheta = (np.cos(E) - e)/(1 - e*np.cos(E))
+    theta = np.arctan2(sintheta, costheta)
+    return theta
+
+def E2M(E, e):
+    """
+    Inputs:
+       E: Eccentric anomaly list. Numpy array. Can also be a tuple or a list.
+       e: Eccentricity list. Numpy array. Can also be a tuple or a list.
+    Outputs:
+       M: Mean anomaly list.
+    """
+    if isinstance(E, list) or isinstance(theta, tuple):
+        E = np.array(E, np.float64)
+    if isinstance(e, list) or isinstance(e, tuple):
+        e = np.array(e, np.float64)
+
+    M = E - e*np.sin(E)
+    return M
