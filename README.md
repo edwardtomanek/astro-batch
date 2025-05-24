@@ -1,5 +1,5 @@
-## astro-batch
-# Overview
+# astro-batch
+## Overview
 Vectorised functions for common astrodynamics calculations. Useful for dealing with large numbers of orbits.
 If you only have small sets of orbits that need to be processed in one go (perhaps up to 10-50), you're much better off using ESA's pykep library: https://esa.github.io/pykep/
 
@@ -9,5 +9,5 @@ Making vectorised versions of the common conversions is not difficult but I ende
 
 I'm likely to keep updating this when I have the time.
 
-# Limitations
+## Limitations
 Currently only designed to work with elliptical prograde orbits.
