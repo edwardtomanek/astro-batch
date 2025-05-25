@@ -14,12 +14,12 @@ def kep2cart(kep, mu=1.32712440018e+20):
     shape = kep.shape
     cart = np.zeros(shape, np.float64)
 
-    a = np.copy(kep[..., [0]])
-    e = np.copy(kep[..., [1]])
-    i = np.copy(kep[..., [2]])
-    w = np.copy(kep[..., [3]])
-    RAAN = np.copy(kep[..., [4]])
-    theta = np.copy(kep[..., [5]])
+    a = kep[..., [0]].copy()
+    e = kep[..., [1]].copy()
+    i = kep[..., [2]].copy()
+    w = kep[..., [3]].copy()
+    RAAN = kep[..., [4]].copy()
+    theta = kep[..., [5]].copy()
 
     sinE = (np.sqrt(1 - e**2)*np.sin(theta))/(1 + e*np.cos(theta))
     cosE = (e + np.cos(theta))/(1 + e*np.cos(theta))
@@ -63,8 +63,8 @@ def cart2kep(cart, mu=1.32712440018e+20):
     shape = cart.shape
     kep = np.zeros(shape, np.float64)
 
-    r_vec = np.copy(cart[..., 0:3])
-    v_vec = np.copy(cart[..., 3:6])
+    r_vec = cart[..., 0:3].copy()
+    v_vec = cart[..., 3:6].copy()
 
     
     r = np.linalg.norm(r_vec, axis=-1, keepdims=True)
@@ -94,11 +94,10 @@ def cart2kep(cart, mu=1.32712440018e+20):
 
     return kep
 
-def kep2mee(kep, mu=1.32712440018e+20):
+def kep2mee(kep):
     """
     Inputs:
        kep: Orbit list. Numpy array with last dimension in format [a, e, i, w, RAAN, theta]. Can also be a tuple or a list.
-       mu: Gravitational parameter of central body. Defaults to MU_SUN (1.32712440018e+20) in m3/s2
     Outputs:
        mee: Orbit list in modified equinoctial elements [p, f, g, h, k, L], along the last dimension with same size as kep.
     """
@@ -108,12 +107,12 @@ def kep2mee(kep, mu=1.32712440018e+20):
     shape = kep.shape
     mee = np.zeros(shape, np.float64)
 
-    a = np.copy(kep[..., [0]])
-    e = np.copy(kep[..., [1]])
-    i = np.copy(kep[..., [2]])
-    w = np.copy(kep[..., [3]])
-    RAAN = np.copy(kep[..., [4]])
-    theta = np.copy(kep[..., [5]])
+    a = kep[..., [0]].copy()
+    e = kep[..., [1]].copy()
+    i = kep[..., [2]].copy()
+    w = kep[..., [3]].copy()
+    RAAN = kep[..., [4]].copy()
+    theta = kep[..., [5]].copy()
 
     mee[..., [0]] = a*(1 - e**2)
     mee[..., [1]] = e*np.cos(w + RAAN)
@@ -123,6 +122,34 @@ def kep2mee(kep, mu=1.32712440018e+20):
     mee[..., [5]] = w + RAAN + theta
 
     return mee
+
+def mee2kep(mee):
+    """
+    Inputs:
+       mee: Orbit list. Numpy array with last dimension in format [p, f, g, h, k, L]. Can also be a tuple or a list.
+    Outputs:
+       kep: Orbit list in Keplerian elements [a, e, i, w, RAAN, theta], along the last dimension with same size as kep.
+    """
+    if isinstance(mee, list) or isinstance(mee, tuple):
+        mee = np.array(mee, np.float64)
+
+    shape = mee.shape
+    kep = np.zeros(shape, np.float64)
+
+    p = mee[..., [0]].copy()
+    f = mee[..., [1]].copy()
+    g = mee[..., [2]].copy()
+    h = mee[..., [3]].copy()
+    k = mee[..., [4]].copy()
+    L = mee[..., [5]].copy()
+
+    kep[..., [1]] = np.sqrt(f**2 + g**2)
+    kep[..., [0]] = p/(1 - kep[..., [1]]**2)
+    kep[..., [2]] = np.arctan2(2*np.sqrt(h**2 + k**2), 1 - h**2 - k**2)
+    kep[..., [3]] = np.arctan2(g*h - f*k, f*h + g*k)%(2*np.pi)
+    kep[..., [4]] = np.arctan2(k, h)%(2*np.pi)
+    kep[..., [5]] = (L - kep[..., [4]] - kep[..., [3]])%(2*np.pi)
+    return kep
 
 def mee2cart(mee, mu=1.32712440018e+20):
     """
@@ -138,12 +165,12 @@ def mee2cart(mee, mu=1.32712440018e+20):
     shape = mee.shape
     cart = np.zeros(shape, np.float64)
 
-    p = mee[..., [0]]
-    f = mee[..., [1]]
-    g = mee[..., [2]]
-    h = mee[..., [3]]
-    k = mee[..., [4]]
-    L = mee[..., [5]]
+    p = mee[..., [0]].copy()
+    f = mee[..., [1]].copy()
+    g = mee[..., [2]].copy()
+    h = mee[..., [3]].copy()
+    k = mee[..., [4]].copy()
+    L = mee[..., [5]].copy()
 
     alph2 = h**2 - k**2
     s2 = 1 + h**2 + k**2
@@ -179,7 +206,7 @@ def theta2E(theta, e):
     sinE = (np.sqrt(1 - e**2)*np.sin(theta))/(1 + e*np.cos(theta))
     cosE = (e + np.cos(theta))/(1 + e*np.cos(theta))
     E = np.arctan2(sinE, cosE)
-    return E
+    return E%(2*np.pi)
 
 
 def E2theta(E, e):
@@ -198,7 +225,7 @@ def E2theta(E, e):
     sintheta = (np.sqrt(1 - e**2)*np.sin(E))/(1 - e*np.cos(E))
     costheta = (np.cos(E) - e)/(1 - e*np.cos(E))
     theta = np.arctan2(sintheta, costheta)
-    return theta
+    return theta%(2*np.pi)
 
 def E2M(E, e):
     """
@@ -214,4 +241,4 @@ def E2M(E, e):
         e = np.array(e, np.float64)
 
     M = E - e*np.sin(E)
-    return M
+    return M%(2*np.pi)
