@@ -250,7 +250,7 @@ def M2E(M, e):
        M: Mean anomaly list. Numpy array. Can also be a tuple or a list.
        e: Eccentricity list. Numpy array. Can also be a tuple or a list.
     Outputs:
-       M: Mean anomaly list.
+       E: Eccentric anomaly list.
     """
     if isinstance(M, list) or isinstance(M, tuple):
         M = np.array(M, np.float64)
