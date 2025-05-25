@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.optimize import newton
 
 def kep2cart(kep, mu=1.32712440018e+20):
     """
@@ -242,3 +243,20 @@ def E2M(E, e):
 
     M = E - e*np.sin(E)
     return M%(2*np.pi)
+
+def M2E(M, e):
+    """
+    Inputs:
+       M: Mean anomaly list. Numpy array. Can also be a tuple or a list.
+       e: Eccentricity list. Numpy array. Can also be a tuple or a list.
+    Outputs:
+       M: Mean anomaly list.
+    """
+    if isinstance(M, list) or isinstance(M, tuple):
+        M = np.array(M, np.float64)
+    if isinstance(e, list) or isinstance(e, tuple):
+        e = np.array(e, np.float64)
+    
+    E = newton(lambda E: E - e*np.sin(E) - M, M, fprime=lambda E: 1 - e*np.cos(E), fprime2=lambda E: e*np.sin(E))
+
+    return E%(2*np.pi)
