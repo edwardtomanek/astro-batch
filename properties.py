@@ -3,7 +3,7 @@ import numpy as np
 def period(inp, param='a', mu=1.32712440018e+20):
     """
     Inputs:
-       inp: Orbit list or semimajor axis list. Last dimension is either [a], [a, e, i, w, RAAN, theta], [p, f, g, h, k, L], [rx, ry, rz, vx, vy, vz]
+       inp: Orbit list or semimajor axis list. Last dimension is either [a], [a, e, i, w, RAAN, theta], [p, f, g, h, k, L], [rx, ry, rz, vx, vy, vz].  Numpy array, can also be a tuple or a list.
        param: String defining parametrisation of input. Valid options are: 'kep', 'cart', 'mee', 'a'. Default 'a'
        mu: Gravitational parameter of central body. Defaults to MU_SUN (1.32712440018e+20) in m3/s2
     Outputs:
@@ -31,7 +31,7 @@ def period(inp, param='a', mu=1.32712440018e+20):
 def rperi(inp1, inp2=None, param='kep', mu=1.32712440018e+20):
     """
     Inputs:
-       inp1: Main input. Last dimension is either [a], [a, e, i, w, RAAN, theta], [p, f, g, h, k, L], [rx, ry, rz, vx, vy, vz]
+       inp1: Main input. Last dimension is either [a], [a, e, i, w, RAAN, theta], [p, f, g, h, k, L], [rx, ry, rz, vx, vy, vz]. Numpy array, can also be a tuple or a list.
        inp2: Additional input for [e] if inp1 is [a]. Otherwise it is ignored.
        param: String defining parametrisation of input. Valid options are: 'kep', 'cart', 'mee', 'ae'. Default 'kep'
        mu: Gravitational parameter of central body. Defaults to MU_SUN (1.32712440018e+20) in m3/s2
@@ -72,7 +72,7 @@ def rperi(inp1, inp2=None, param='kep', mu=1.32712440018e+20):
 def rapo(inp1, inp2=None, param='kep', mu=1.32712440018e+20):
     """
     Inputs:
-       inp1: Main input. Last dimension is either [a], [a, e, i, w, RAAN, theta], [p, f, g, h, k, L], [rx, ry, rz, vx, vy, vz]
+       inp1: Main input. Last dimension is either [a], [a, e, i, w, RAAN, theta], [p, f, g, h, k, L], [rx, ry, rz, vx, vy, vz]. Numpy array, can also be a tuple or a list.
        inp2: Additional input for [e] if inp1 is [a]. Otherwise it is ignored.
        param: String defining parametrisation of input. Valid options are: 'kep', 'cart', 'mee', 'ae'. Default 'kep'
        mu: Gravitational parameter of central body. Defaults to MU_SUN (1.32712440018e+20) in m3/s2
