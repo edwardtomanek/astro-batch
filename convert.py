@@ -218,7 +218,7 @@ def E2theta(E, e):
     Outputs:
        theta: True anomaly list.
     """
-    if isinstance(E, list) or isinstance(theta, tuple):
+    if isinstance(E, list) or isinstance(E, tuple):
         E = np.array(E, np.float64)
     if isinstance(e, list) or isinstance(e, tuple):
         e = np.array(e, np.float64)
